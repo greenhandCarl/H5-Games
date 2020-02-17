@@ -89,7 +89,6 @@ export default class App extends Vue {
 
   onDisappear (word: Word) {
     this.words = this.words.filter(item => item.keyword !== word.keyword)
-    console.log('onDisappear')
   }
 }
 </script>
