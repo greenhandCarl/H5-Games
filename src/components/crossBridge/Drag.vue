@@ -8,6 +8,8 @@
     <section class="matching-pairs"></section>
     <section class="draggable-items"></section>
     <div class="draging-view"></div>
+    <img class="answer-emo" src="../../assets/crossBridge/answer_emo.png"/>
+    <img class="game-house" src="../../assets/crossBridge/house.png"/>
   </div>
 </template>
 
@@ -50,7 +52,7 @@ export default {
           color: '#a4c639'
         },
         {
-          brandName: 'handsome',
+          brandName: 'good',
           color: '#000000'
         }
       ],
@@ -290,11 +292,11 @@ export default {
 <style lang='scss'>
 .score {
   font-family: monospace;
-  text-align: center;
-  font-size: 2rem;
+  text-align: right;
+  font-size: 1.2rem;
   font-weight: bold;
   letter-spacing: 0.25rem;
-  padding: 1rem;
+  padding: 0.5rem;
   position: relative;
   transition: opacity 0.2s;
 }
@@ -330,19 +332,26 @@ export default {
 .draggable-items {
   display: flex;
   justify-content: center;
-  margin: 3rem 1rem 0.5rem 1rem;
+  margin: 1.5rem 1rem 0.5rem 1rem;
   transition: opacity 0.5s;
 }
 
 .draggable {
-  height: 3rem;
+  height: 2.5rem;
+  min-width: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   font-weight: bold;
-  padding: 0.5rem;
+  padding: 0.2rem 0.5rem;
   transition: opacity 0.2s;
+  background-image: url('../../assets/crossBridge/drag_bg.png');
+  background-position: center;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  margin-left: 0.2rem;
+  margin-right: 0.2rem;
 }
 
 .draggable:hover {
@@ -350,23 +359,25 @@ export default {
 }
 
 .matching-pairs {
-  height: 8rem;
+  height: 7rem;
   transition: opacity 0.5s;
   display: flex;
   flex-direction: row;
   margin-left: auto;
   margin-right: auto;
-  width: 100%;
+  width: 68%;
   overflow: hidden;
   position: relative;
   background-image: url('../../assets/crossBridge/matching_bg.png');
-  background-position: center center;
+  background-position: center;
   background-size:100% 100%;
   background-repeat:no-repeat;
+  padding-top: 0.8rem;
 }
 
 .matching-pair {
-  height: 3rem;
+  height: 2.5rem;
+  max-width: 25%;
   flex: 1 auto;
   display: flex;
   flex-direction: column;
@@ -384,10 +395,12 @@ export default {
 }
 
 .droppable {
-  width: 6rem;
+  width: 90%;
   font-size: 4rem;
-  background-color: #fff;
-  border: 3px dashed #111;
+  background-image: url('../../assets/crossBridge/cloud.png');
+  background-position: center;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
   transition: 0.2s;
 }
 
@@ -408,6 +421,22 @@ export default {
 
 .draggable.dragged:hover {
   opacity: 0.1;
+}
+
+.answer-emo{
+  width: 5rem;
+  height: 5rem;
+  position:absolute;
+  top: 30%;
+  left: 0.5rem;
+}
+
+.game-house{
+  width: 5rem;
+  height: 5rem;
+  position:absolute;
+  top: 30%;
+  right: 0.5rem;
 }
 
 .draging-view{
