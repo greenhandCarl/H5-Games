@@ -15,5 +15,10 @@ module.exports = {
             template: 'public/page2.html',
             filename: 'page2.html'
         },
+        page3: {
+            entry: 'src/pages/crossBridge/main.ts',
+            template: 'public/crossBridge.html',
+            filename: 'crossBridge.html'
+        },
     }
 }
