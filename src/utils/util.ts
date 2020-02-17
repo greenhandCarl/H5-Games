@@ -25,3 +25,49 @@ export const detectOrient = () => {
   }
   if (wrapper) wrapper.style.cssText = style
 }
+
+export class RandomPos {
+  private existPos: Array<{x: number; y: number}> = []
+  private distance = 144
+  private randomCount = 0
+  private subject: { errRandom: number } = { errRandom: 0 }
+  constructor (distance: number) {
+    this.existPos = []
+    this.distance = distance
+  }
+
+  getRandomNumberByRange (start: number, end: number) {
+    return Math.floor(Math.random() * (end - start) + start)
+  }
+
+  getRandomPos (minX: number, maxX: number, minY: number, maxY: number): {x: number; y: number } {
+    this.randomCount = this.randomCount + 1
+    const randomX = this.getRandomNumberByRange(minX, maxX)
+    const randomY = this.getRandomNumberByRange(minY, maxY)
+
+    let pass = true
+
+    for (let i = 0; i < this.existPos.length; i++) {
+      const pos = this.existPos[i]
+
+      const distanceX = Math.abs(randomX - pos.x)
+      const distanceY = Math.abs(randomY - pos.y)
+      const distance = Math.floor(Math.sqrt(Math.pow(distanceY, 2) + Math.pow(distanceX, 2)))
+
+      if (distance < this.distance) {
+        pass = false
+        break
+      }
+    }
+    if (!pass) {
+      if (this.randomCount > 2000) { // 如果获取随机数2000次都没有获取到不重叠的位置 则自定义位置
+        this.subject.errRandom = this.subject.errRandom + 1
+        return { x: minX + this.subject.errRandom * 50, y: minY - 50 }
+      }
+      return this.getRandomPos(minX, maxX, minY, maxY)
+    } else {
+      this.existPos.push({ x: randomX, y: randomY })
+      return { x: randomX, y: randomY }
+    }
+  }
+}
