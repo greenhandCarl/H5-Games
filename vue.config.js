@@ -5,15 +5,15 @@ module.exports = {
     publicPath: "./",
     pages: {
         index: 'src/main.ts',
-        page1: {
+        wordDrag: {
             entry: 'src/pages/wordDrag/main.ts',
             template: 'public/wordDrag.html',
             filename: 'wordDrag.html'
         },
-        page2: {
-            entry: 'src/pages/page2/main.ts',
-            template: 'public/page2.html',
-            filename: 'page2.html'
+        wordMatch: {
+            entry: 'src/pages/wordMatch/main.ts',
+            template: 'public/wordMatch.html',
+            filename: 'wordMatch.html'
         },
     }
 }
