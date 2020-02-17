@@ -15,5 +15,10 @@ module.exports = {
             template: 'public/wordMatch.html',
             filename: 'wordMatch.html'
         },
+        page3: {
+            entry: 'src/pages/crossBridge/main.ts',
+            template: 'public/crossBridge.html',
+            filename: 'crossBridge.html'
+        },
     }
 }
