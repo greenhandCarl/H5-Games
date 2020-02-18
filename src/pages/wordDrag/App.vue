@@ -275,8 +275,6 @@ html,body {
 }
 /* 横屏 */
 @media screen and (orientation: landscape) {
-  #app {
-  }
 }
 
 </style>
