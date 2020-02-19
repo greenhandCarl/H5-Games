@@ -6,18 +6,19 @@
         <span class="total">{{gameResult.total}}</span>
         <button id="play-again-btn" ref="againBtn" @click="playAgainBtnClick">重新开始</button>
       </section>
+      <section class="draggable-items">
+        <span v-for="(item, index) in draggableWords" :key="index" @touchstart.stop="dragStart"
+        class="draggable" :style="{color: item.color}" :data-word="item.name">
+          <img src="./img/drag_bg.png"/>
+          <i class="drag-word">{{item.name}}</i>
+        </span>
+      </section>
       <section class="matching-pairs">
         <div class='matching-pair' v-for="(item, index) in droppableWords" :key="index">
           <span class='droppable' :data-word="item.name"></span>
         </div>
       </section>
-      <section class="draggable-items">
-        <i v-for="(item, index) in draggableWords" :key="index" @touchstart="dragStart"
-        class="draggable" :style="{color: item.color}" :data-word="item.name">{{item.name}}</i>
-      </section>
       <div class="draging-view" ref="dragView"></div>
-      <img class="answer-emo" src="./img/answer_emo.png"/>
-      <img class="game-house" src="./img/house.png"/>
     </div>
   </div>
 </template>
@@ -73,8 +74,8 @@ export default class App extends Vue {
   ]
 
   gameConfig: Config = {
-    totalDraggableItems: 4,
-    totalMatchingPairs: 4
+    totalDraggableItems: 3,
+    totalMatchingPairs: 3
   }
 
   gameResult: Result = {
@@ -131,12 +132,19 @@ export default class App extends Vue {
 
   dragStart (event: any) {
     console.log('dragStart')
-    if (this.dragView.style.display === 'block') return
-    const sourceNode = event.target
+    console.log(event.currentTarget)
+    if (!event.currentTarget) return
+    const sourceNode = event.currentTarget
+    const objPos: any = this.getObjPos(sourceNode)
+    console.log(event)
     // 克隆节点
     const clonedNode = sourceNode.cloneNode(true)
+    sourceNode.style.visibility = 'hidden'
+    console.log(clonedNode)
     // 在父节点插入克隆的节点
     this.dragView.innerHTML = ''
+    clonedNode.style.width = objPos.w + 'px'
+    clonedNode.style.height = objPos.h + 'px'
     this.dragView.appendChild(clonedNode)
     this.dragView.style.display = 'block'
     this.dragChangePos(event)
@@ -218,17 +226,19 @@ export default class App extends Vue {
       }
     })
     if (!isDrop) {
-      const oldPos: any = this.getFromTragetPos()
-      if (!oldPos) return
+      const oldTraget: any = this.getFromTragetPos()
+      if (!oldTraget) return
       this.dragView.classList.add('trans-ani')
       this.$nextTick(() => {
         console.log('oldPos')
-        console.log(oldPos)
+        console.log(oldTraget)
+        const oldPos = this.getObjPos(oldTraget)
         this.dragView.style.left = oldPos.x + 'px'
         this.dragView.style.top = oldPos.y + 'px'
         setTimeout(() => {
           this.dragView.classList.remove('trans-ani')
           this.dragView.style.display = 'none'
+          oldTraget.style.visibility = 'visible'
         }, 400)
       })
     }
@@ -251,7 +261,7 @@ export default class App extends Vue {
     if (!dragTarget) return ''
     for (let i = 0; i < this.draggableElements.length; i++) {
       if (this.draggableElements[i].getAttribute('data-word') === dragTarget.getAttribute('data-word')) {
-        return this.getObjPos(this.draggableElements[i])
+        return this.draggableElements[i]
       }
     }
     return ''
@@ -354,87 +364,83 @@ html {
 
 .draggable-items {
   display: flex;
+  width: 80%;
+  height: 5rem;
   justify-content: center;
-  margin: 1.5rem 1rem 0.5rem 1rem;
+  margin: 1.5rem 1.5rem 0.5rem 1.5rem;
   transition: opacity 0.5s;
+
+  >span{
+    margin-left: 1.4rem;
+    margin-right: 1.4rem;
+  }
 }
 
 .draggable {
   height: 2.5rem;
   min-width: 2rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: bold;
-  padding: 0.2rem 0.5rem;
   transition: opacity 0.2s;
-  background-image: url('./img/drag_bg.png');
   background-position: center;
   background-size:100% 100%;
   background-repeat:no-repeat;
-  margin-left: 0.2rem;
-  margin-right: 0.2rem;
+  img{
+    width: 100%;
+  }
+
+  .drag-word{
+    height: 2rem;
+    width: 100%;
+    display: block;
+  }
 }
 
 .matching-pairs {
-  height: 7rem;
+  height: 4.5rem;
   transition: opacity 0.5s;
   display: flex;
   flex-direction: row;
-  margin-left: auto;
-  margin-right: auto;
-  width: 68%;
+  width: 80%;
   overflow: hidden;
   position: relative;
-  background-image: url('./img/matching_bg.png');
   background-position: center;
   background-size:100% 100%;
   background-repeat:no-repeat;
-  padding-top: 0.8rem;
+  padding-top: 1rem;
+  margin: 1.5rem 1.5rem 0.5rem 1.5rem;
   .matching-pair {
     height: 2.5rem;
-    max-width: 25%;
+    max-width: 33.3%;
+    min-width: 2rem;
     flex: 1 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    span {
+    margin-left: 1.4rem;
+    margin-right: 1.4rem;
+
+    .droppable {
       height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
       text-align: center;
       user-select: none;
-    }
-
-    .droppable {
       width: 90%;
       font-size: 4rem;
-      background-image: url('./img/cloud.png');
       background-position: center;
       background-size:100% 100%;
       background-repeat:no-repeat;
       transition: 0.2s;
+      border-bottom: 2px solid #3514f3;
     }
   }
-}
-
-.answer-emo{
-  width: 5rem;
-  height: 5rem;
-  position:absolute;
-  top: 30%;
-  left: 0.5rem;
-}
-
-.game-house{
-  width: 5rem;
-  height: 5rem;
-  position:absolute;
-  top: 30%;
-  right: 0.5rem;
 }
 
 .draging-view{

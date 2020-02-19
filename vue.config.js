@@ -15,10 +15,15 @@ module.exports = {
             template: 'public/wordMatch.html',
             filename: 'wordMatch.html'
         },
-        page3: {
+        crossBridge: {
             entry: 'src/pages/crossBridge/main.ts',
             template: 'public/crossBridge.html',
             filename: 'crossBridge.html'
         },
+        sinkSubmarine: {
+            entry: 'src/pages/sinkSubmarine/main.ts',
+            template: 'public/sinkSubmarine.html',
+            filename: 'sinkSubmarine.html'
+        }
     }
 }
