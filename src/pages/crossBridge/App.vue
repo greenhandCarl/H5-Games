@@ -326,6 +326,11 @@ html {
   transition: opacity 0.2s;
 }
 
+#play-again-btn.play-again-btn-entrance {
+  opacity: 1;
+  transform: translate(-50%,6rem);
+}
+
 #play-again-btn {
   position: absolute;
   z-index:999;
@@ -345,10 +350,6 @@ html {
   transition: opacity 0.5s, transform 0.5s, background-color 0.2s;
   :hover {
     background-color: #333;
-  }
-  .play-again-btn-entrance {
-    opacity: 1;
-    transform: translate(-50%,6rem);
   }
 }
 

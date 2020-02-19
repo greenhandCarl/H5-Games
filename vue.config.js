@@ -24,6 +24,11 @@ module.exports = {
             entry: 'src/pages/sinkSubmarine/main.ts',
             template: 'public/sinkSubmarine.html',
             filename: 'sinkSubmarine.html'
+        },
+        dumpAirship: {
+            entry: 'src/pages/dumpAirship/main.ts',
+            template: 'public/dumpAirship.html',
+            filename: 'dumpAirship.html'
         }
     }
 }
