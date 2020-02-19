@@ -152,7 +152,7 @@ export default class App extends Vue {
     })
   }
 
-  onOptTouchStart (option: Option, e: any) {
+  onOptTouchStart (option: Option, e: TouchEvent) {
     const touch = e.touches[0]
     this.optStartX = touch.pageX
     this.optStartY = touch.pageY
@@ -167,7 +167,7 @@ export default class App extends Vue {
     document.addEventListener('touchend', this.onAnswerTouchEnd)
   }
 
-  onAnswerTouchEnd (e: any) {
+  onAnswerTouchEnd (e: TouchEvent) {
     const touch = e.changedTouches[0]
     const currentX = touch.pageX
     const currentY = touch.pageY
@@ -197,7 +197,7 @@ export default class App extends Vue {
     })
   }
 
-  onDocTouchMove (e: any) {
+  onDocTouchMove (e: TouchEvent) {
     const width = document.documentElement.clientWidth
     const height = document.documentElement.clientHeight
     const touch = e.touches[0]

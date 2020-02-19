@@ -27,20 +27,18 @@ export const detectOrient = () => {
 }
 
 export class RandomPos {
-  private existPos: Array<{x: number; y: number}> = []
-  private distance = 144
+  private existPos: Array<{x: number; y: number; radius: number}> = []
   private randomCount = 0
   private subject: { errRandom: number } = { errRandom: 0 }
-  constructor (distance: number) {
+  constructor () {
     this.existPos = []
-    this.distance = distance
   }
 
   getRandomNumberByRange (start: number, end: number) {
     return Math.floor(Math.random() * (end - start) + start)
   }
 
-  getRandomPos (minX: number, maxX: number, minY: number, maxY: number): {x: number; y: number } {
+  getRandomPos (minX: number, maxX: number, minY: number, maxY: number, radius: number): {x: number; y: number } {
     this.randomCount = this.randomCount + 1
     const randomX = this.getRandomNumberByRange(minX, maxX)
     const randomY = this.getRandomNumberByRange(minY, maxY)
@@ -54,7 +52,9 @@ export class RandomPos {
       const distanceY = Math.abs(randomY - pos.y)
       const distance = Math.floor(Math.sqrt(Math.pow(distanceY, 2) + Math.pow(distanceX, 2)))
 
-      if (distance < this.distance) {
+      const tangentDistance = radius + pos.radius // 相切距离
+
+      if (distance < tangentDistance) {
         pass = false
         break
       }
@@ -64,9 +64,9 @@ export class RandomPos {
         this.subject.errRandom = this.subject.errRandom + 1
         return { x: minX + this.subject.errRandom * 50, y: minY - 50 }
       }
-      return this.getRandomPos(minX, maxX, minY, maxY)
+      return this.getRandomPos(minX, maxX, minY, maxY, radius)
     } else {
-      this.existPos.push({ x: randomX, y: randomY })
+      this.existPos.push({ x: randomX, y: randomY, radius })
       return { x: randomX, y: randomY }
     }
   }

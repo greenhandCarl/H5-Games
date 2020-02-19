@@ -29,6 +29,11 @@ module.exports = {
             entry: 'src/pages/dumpAirship/main.ts',
             template: 'public/dumpAirship.html',
             filename: 'dumpAirship.html'
+        },
+        bubbleJab: {
+            entry: 'src/pages/bubbleJab/main.ts',
+            template: 'public/bubbleJab.html',
+            filename: 'bubbleJab.html'
         }
     }
 }
