@@ -24,6 +24,11 @@ module.exports = {
             entry: 'src/pages/sinkSubmarine/main.ts',
             template: 'public/sinkSubmarine.html',
             filename: 'sinkSubmarine.html'
+        },
+        bubbleJab: {
+            entry: 'src/pages/bubbleJab/main.ts',
+            template: 'public/bubbleJab.html',
+            filename: 'bubbleJab.html'
         }
     }
 }

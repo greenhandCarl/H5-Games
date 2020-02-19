@@ -61,11 +61,11 @@ export default class App extends Vue {
       clientWidth = document.documentElement.clientHeight
       clientHeight = document.documentElement.clientWidth
     }
-    const randomPos: RandomPos = new RandomPos(100)
+    const randomPos: RandomPos = new RandomPos()
     const halfWidth = this.wordWidth / 2
     const halfHeight = this.wordHeight / 2
     this.words = this.words.map(item => {
-      const circleCenter = randomPos.getRandomPos(halfWidth, clientWidth - halfWidth, halfHeight, clientHeight - halfHeight)
+      const circleCenter = randomPos.getRandomPos(halfWidth, clientWidth - halfWidth, halfHeight, clientHeight - halfHeight, 50)
       const pos = { x: circleCenter.x - halfWidth, y: circleCenter.y - halfHeight }
       return { ...item, ...pos }
     })
