@@ -11,8 +11,8 @@
           <span>{{item.name}}</span>
         </div>
       </section>
-      <CountProgress class="count-progress-warp" :start="startPlay" time="20000" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
-      <img class="answer-girl" src="./img/answer_girl.png"/>
+      <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" time="20000" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
+      <img class="answer-girl" src="./img/answer_girl.png" ref="girlElem" :style="girlStyle"/>
       <img class="game-airship" src="./img/airship.png"/>
     </div>
   </div>
@@ -29,6 +29,7 @@ interface Word {
 
 interface Config {
   totalMatchingPairs: number;
+  startPlay: boolean;
 }
 
 interface Result {
@@ -39,8 +40,8 @@ interface Result {
 interface Position {
   x: number;
   y: number;
-  w?: number;
-  h?: number;
+  w: number;
+  h: number;
 }
 
 @Component({
@@ -49,35 +50,18 @@ interface Position {
   }
 })
 export default class App extends Vue {
-  words: Word[] = [
-    {
-      name: 'Are',
-      isCorrect: false
-    },
-    {
-      name: 'you',
-      isCorrect: false
-    },
-    {
-      name: 'a',
-      isCorrect: false
-    },
-    {
-      name: 'good',
-      isCorrect: false
-    },
-    {
-      name: 'boy',
-      isCorrect: false
-    },
-    {
-      name: '?',
-      isCorrect: false
-    }
+  words: Array<Word> = [
+    { name: 'Are', isCorrect: false },
+    { name: 'you', isCorrect: false },
+    { name: 'a', isCorrect: false },
+    { name: 'good', isCorrect: false },
+    { name: 'boy', isCorrect: false },
+    { name: '?', isCorrect: false }
   ]
 
   gameConfig: Config = {
-    totalMatchingPairs: 6
+    totalMatchingPairs: 6,
+    startPlay: false
   }
 
   gameResult: Result = {
@@ -85,22 +69,25 @@ export default class App extends Vue {
     total: 0
   }
 
-  currentPos = 0
   isHorizontal = false
-  startPlay = false
 
-  girlView: any
+  girlStyle = {
+    left: '0.5rem',
+    top: '30%'
+  }
+
+  root: any
 
   mounted () {
-    this.girlView = document.querySelector('.answer-girl')
-    this.initiateGame()
+    this.root = document.querySelector('.game-body')
     const orientation = window.matchMedia('(orientation: portrait)')
     orientation.addListener(this.orientationLister)
     this.orientationLister(orientation)
-    this.startPlay = true
+    this.initiateGame()
+    this.gameConfig.startPlay = true
   }
 
-  orientationLister (mql: any) {
+  orientationLister (mql: MediaQueryList | MediaQueryListEvent) {
     if (mql.matches) {
       console.log('此时竖屏')
       this.isHorizontal = false
@@ -111,25 +98,29 @@ export default class App extends Vue {
   }
 
   initiateGame () {
+    this.gameResult.correct = 0
     this.gameResult.total = this.gameConfig.totalMatchingPairs
   }
 
-  clickWord (event: any) {
+  clickWord (event: Event) {
     console.log(event.currentTarget)
-    if (!event.currentTarget) return
-    const targetPos = event.currentTarget.getAttribute('data-pos')
-    console.log(targetPos)
-    if (parseInt(targetPos) === this.currentPos) {
-      this.currentPos++
+    const curTarget = event.currentTarget as HTMLElement
+    if (!curTarget) return
+    const targetPos = curTarget.getAttribute('data-pos') || '0'
+    if (parseInt(targetPos) === this.gameResult.correct) {
+      const girlElem = this.$refs.girlElem as HTMLElement
+      const curPos = this.getObjPos(curTarget)
+      const girlPos = this.getObjPos(girlElem)
+
+      this.girlStyle = {
+        left: `${curPos.x + curPos.w / 2 - girlPos.w / 2}px`,
+        top: `${curPos.y - curPos.h / 2}px`
+      }
+      curTarget.classList.add('matching-correct')
       this.gameResult.correct++
-      event.currentTarget.classList.add('matching-correct')
-      const objPos: any = this.getObjPos(event.currentTarget)
-      const girlPos: any = this.getObjPos(this.girlView)
-      this.girlView.style.left = (objPos.x + objPos.w / 2 - girlPos.w / 2) + 'px'
-      this.girlView.style.top = (objPos.y - girlPos.h / 2) + 'px'
     }
     if (this.gameResult.correct === this.gameResult.total) {
-      const againBtn: any = this.$refs.againBtn
+      const againBtn = this.$refs.againBtn as HTMLElement
       againBtn.style.display = 'block'
       setTimeout(() => {
         againBtn.classList.add('play-again-btn-entrance')
@@ -137,35 +128,29 @@ export default class App extends Vue {
     }
   }
 
-  playAgainBtnClick (event: any) {
-    const againBtn: any = this.$refs.againBtn
-    console.log('clickAgain')
-    againBtn.classList.remove('play-again-btn-entrance')
-    this.gameResult.correct = 0
-    this.gameResult.total = 0
-    this.currentPos = 0
-    const matchingPairs: any = document.querySelector('.matching-pairs')
-    const scoreSection: any = document.querySelector('.score')
-    const correctSpan: any = document.querySelector('.correct')
-    const totalSpan: any = document.querySelector('.total')
+  playAgainBtnClick (event: Event) {
+    const againBtn = event.currentTarget as HTMLElement
+    const matchingPairs = this.root.querySelector('.matching-pairs')
+    const scoreSection = this.root.querySelector('.score')
+    const matchingElements = this.root.querySelectorAll('.matching-pair') as NodeListOf<HTMLElement>
     matchingPairs.style.opacity = 0
     scoreSection.style.opacity = 0
+    againBtn.classList.remove('play-again-btn-entrance')
     setTimeout(() => {
-      againBtn.style.display = 'none'
-      const matchingElements: any = document.querySelectorAll('.matching-pair')
       matchingElements.forEach((elem: HTMLElement) => {
         elem.classList.remove('matching-correct')
       })
-      this.girlView.style.left = '0.5rem'
-      this.girlView.style.top = '30%'
+      this.girlStyle = {
+        left: '0.5rem',
+        top: '30%'
+      }
+      againBtn.style.display = 'none'
       this.initiateGame()
-      correctSpan.textContent = this.gameResult.correct
-      totalSpan.textContent = this.gameResult.total
       matchingPairs.style.opacity = 1
       scoreSection.style.opacity = 1
+      this.gameConfig.startPlay = true
     }, 500)
     event.stopPropagation()
-    this.startPlay = true
   }
 
   getObjPos (target: HTMLElement): Position {
@@ -175,19 +160,19 @@ export default class App extends Vue {
       w: target.offsetWidth,
       h: target.offsetHeight
     }
-    let offsetTarget: any = target.offsetParent
+    let offsetTarget = target.offsetParent as HTMLElement
     // 当元素为body时，其parent为null
     while (offsetTarget) {
       pos.x += offsetTarget.offsetLeft
       pos.y += offsetTarget.offsetTop
-      offsetTarget = offsetTarget.offsetParent
+      offsetTarget = offsetTarget.offsetParent as HTMLElement
     }
     return pos
   }
 
   onCountdown (time: number) {
     if (time === 0) {
-      this.startPlay = false
+      this.gameConfig.startPlay = false
     }
   }
 }

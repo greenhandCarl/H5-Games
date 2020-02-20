@@ -34,6 +34,11 @@ module.exports = {
             entry: 'src/pages/bubbleJab/main.ts',
             template: 'public/bubbleJab.html',
             filename: 'bubbleJab.html'
+        },
+        grabJellyfish: {
+            entry: 'src/pages/grabJellyfish/main.ts',
+            template: 'public/grabJellyfish.html',
+            filename: 'grabJellyfish.html'
         }
     }
 }

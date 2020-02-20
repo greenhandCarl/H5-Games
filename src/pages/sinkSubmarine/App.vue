@@ -46,8 +46,8 @@ interface Result {
 interface Position {
   x: number;
   y: number;
-  w?: number;
-  h?: number;
+  w: number;
+  h: number;
 }
 
 @Component({
@@ -56,27 +56,12 @@ interface Position {
   }
 })
 export default class App extends Vue {
-  words: Word[] = [
-    {
-      name: 'i',
-      color: '#ff0000'
-    },
-    {
-      name: 'am',
-      color: '#fd5c63'
-    },
-    {
-      name: 'a',
-      color: '#333333'
-    },
-    {
-      name: 'boy',
-      color: '#a4c639'
-    },
-    {
-      name: 'good',
-      color: '#000000'
-    }
+  words: Array<Word> = [
+    { name: 'i', color: '#ff0000' },
+    { name: 'am', color: '#fd5c63' },
+    { name: 'a', color: '#333333' },
+    { name: 'boy', color: '#a4c639' },
+    { name: 'good', color: '#000000' }
   ]
 
   gameConfig: Config = {
@@ -89,8 +74,8 @@ export default class App extends Vue {
     total: 0
   }
 
-  draggableWords: Word[] = []
-  droppableWords: Word[] = []
+  draggableWords: Array<Word> = []
+  droppableWords: Array<Word> = []
 
   dragView: any
   draggableElements: any
@@ -109,7 +94,7 @@ export default class App extends Vue {
     this.startPlay = true
   }
 
-  orientationLister (mql: any) {
+  orientationLister (mql: MediaQueryList | MediaQueryListEvent) {
     if (mql.matches) {
       console.log('此时竖屏')
       this.isHorizontal = false
@@ -139,15 +124,13 @@ export default class App extends Vue {
     })
   }
 
-  dragStart (event: any) {
+  dragStart (event: TouchEvent) {
     console.log('dragStart')
-    console.log(event.currentTarget)
-    if (!event.currentTarget) return
-    const sourceNode = event.currentTarget
-    const objPos: any = this.getObjPos(sourceNode)
-    console.log(event)
+    const sourceNode = event.currentTarget as HTMLElement
+    if (!sourceNode) return
+    const objPos = this.getObjPos(sourceNode)
     // 克隆节点
-    const clonedNode = sourceNode.cloneNode(true)
+    const clonedNode = sourceNode.cloneNode(true) as HTMLElement
     sourceNode.style.visibility = 'hidden'
     console.log(clonedNode)
     // 在父节点插入克隆的节点
@@ -159,11 +142,11 @@ export default class App extends Vue {
     this.dragChangePos(event)
   }
 
-  touchMove (event: any) {
+  touchMove (event: TouchEvent) {
     this.dragChangePos(event)
   }
 
-  touchEnd (event: any) {
+  touchEnd (event: TouchEvent) {
     this.dragChangePos(event)
     console.log('touchEnd')
     const touch = event.targetTouches[0] || event.changedTouches[0]
@@ -172,14 +155,16 @@ export default class App extends Vue {
     const width = document.documentElement.clientWidth
     const curPos: Position = {
       x: this.isHorizontal ? touch.pageX : touch.pageY,
-      y: this.isHorizontal ? touch.pageY : (width - touch.pageX)
+      y: this.isHorizontal ? touch.pageY : (width - touch.pageX),
+      w: 0,
+      h: 0
     }
     console.log(curPos)
     this.checkDropPos(curPos)
   }
 
-  playAgainBtnClick (event: any) {
-    const againBtn: any = this.$refs.againBtn
+  playAgainBtnClick (event: Event) {
+    const againBtn = this.$refs.againBtn as HTMLElement
     console.log('clickAgain')
     againBtn.classList.remove('play-again-btn-entrance')
     this.gameResult.correct = 0
@@ -187,8 +172,6 @@ export default class App extends Vue {
     const draggableItems: any = document.querySelector('.draggable-items')
     const matchingPairs: any = document.querySelector('.matching-pairs')
     const scoreSection: any = document.querySelector('.score')
-    const correctSpan: any = document.querySelector('.correct')
-    const totalSpan: any = document.querySelector('.total')
     draggableItems.style.opacity = 0
     matchingPairs.style.opacity = 0
     scoreSection.style.opacity = 0
@@ -201,8 +184,6 @@ export default class App extends Vue {
         elem.style.visibility = 'visible'
       })
       this.initiateGame()
-      correctSpan.textContent = this.gameResult.correct
-      totalSpan.textContent = this.gameResult.total
       draggableItems.style.opacity = 1
       matchingPairs.style.opacity = 1
       scoreSection.style.opacity = 1
@@ -217,9 +198,12 @@ export default class App extends Vue {
     if (!dragTarget) return
     let isDrop = false
     this.droppableElements.forEach((elem: HTMLElement) => {
-      const objPos: any = this.getObjPos(elem)
-      if (objPos && curPos.x > objPos.x && curPos.x < (objPos.x + objPos.w) &&
-        curPos.y > objPos.y && curPos.y < (objPos.y + objPos.h)) {
+      const objPos = this.getObjPos(elem)
+      if (objPos &&
+        curPos.x > objPos.x &&
+        curPos.x < (objPos.x + objPos.w) &&
+        curPos.y > objPos.y &&
+        curPos.y < (objPos.y + objPos.h)) {
         console.log('in')
         if (elem.getAttribute('data-word') === dragTarget.getAttribute('data-word')) {
           console.log('answer true')
@@ -229,7 +213,7 @@ export default class App extends Vue {
           isDrop = true
           if (this.gameResult.correct === Math.min(this.gameConfig.totalMatchingPairs, this.gameConfig.totalDraggableItems)) {
             // Game Over!!
-            const againBtn: any = this.$refs.againBtn
+            const againBtn = this.$refs.againBtn as HTMLElement
             againBtn.style.display = 'block'
             setTimeout(() => {
               againBtn.classList.add('play-again-btn-entrance')
@@ -239,7 +223,7 @@ export default class App extends Vue {
       }
     })
     if (!isDrop) {
-      const oldTraget: any = this.getFromTragetPos()
+      const oldTraget = this.getFromTragetPos()
       if (!oldTraget) return
       this.dragView.classList.add('trans-ani')
       this.$nextTick(() => {
@@ -257,27 +241,29 @@ export default class App extends Vue {
     }
   }
 
-  dragChangePos (event: any) {
+  dragChangePos (event: TouchEvent) {
     const touch = event.targetTouches[0] || event.changedTouches[0]
     if (!touch) return
     const width = document.documentElement.clientWidth
     const pos: Position = {
       x: this.isHorizontal ? touch.pageX : touch.pageY,
-      y: this.isHorizontal ? touch.pageY : (width - touch.pageX)
+      y: this.isHorizontal ? touch.pageY : (width - touch.pageX),
+      w: 0,
+      h: 0
     }
     this.dragView.style.left = (pos.x - this.dragView.offsetWidth / 2) + 'px'
     this.dragView.style.top = (pos.y - this.dragView.offsetHeight / 2) + 'px'
   }
 
-  getFromTragetPos (): any {
+  getFromTragetPos (): HTMLElement {
     const dragTarget: HTMLElement = this.dragView.getElementsByClassName('draggable')[0]
-    if (!dragTarget) return ''
+    if (!dragTarget) return dragTarget
     for (let i = 0; i < this.draggableElements.length; i++) {
       if (this.draggableElements[i].getAttribute('data-word') === dragTarget.getAttribute('data-word')) {
         return this.draggableElements[i]
       }
     }
-    return ''
+    return dragTarget
   }
 
   generateRandomItemsArray (n: number, originalArray: Word[]): Word[] {
@@ -299,12 +285,12 @@ export default class App extends Vue {
       w: target.offsetWidth,
       h: target.offsetHeight
     }
-    let offsetTarget: any = target.offsetParent
+    let offsetTarget = target.offsetParent as HTMLElement
     // 当元素为body时，其parent为null
     while (offsetTarget) {
       pos.x += offsetTarget.offsetLeft
       pos.y += offsetTarget.offsetTop
-      offsetTarget = offsetTarget.offsetParent
+      offsetTarget = offsetTarget.offsetParent as HTMLElement
     }
     return pos
   }

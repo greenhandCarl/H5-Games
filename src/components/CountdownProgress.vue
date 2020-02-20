@@ -35,7 +35,7 @@ export default class CountdownProgress extends Vue {
 
   @Emit('onCountdown')
   onCountdown (time?: number) {
-    return this.time
+    return time
   }
 
   @Emit('onTimeout')
@@ -61,7 +61,6 @@ export default class CountdownProgress extends Vue {
 .progress-warp {
   margin: 0 auto;
   width: 60%;
-  background: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
