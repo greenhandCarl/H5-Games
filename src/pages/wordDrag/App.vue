@@ -28,11 +28,13 @@
         @touchend='onOptTouchEnd'
       />
     </div>
+    <Record :totalTime_ms='6000' />
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import Record from '@/components/Record.vue'
 
 interface Word {
   content: string;
@@ -59,7 +61,9 @@ interface AreaMap {
   maxY: number;
   keyword: string;
 }
-@Component
+@Component({
+  components: { Record }
+})
 export default class App extends Vue {
   optStartX!: number
   optStartY!: number
@@ -97,8 +101,8 @@ export default class App extends Vue {
         height: 46,
         paddingLeft: 10,
         paddingRight: 10,
-        translateX: 50,
-        translateY: 100,
+        translateX: 17,
+        translateY: 58,
         rotate: 45
       }
     },
@@ -153,6 +157,7 @@ export default class App extends Vue {
   }
 
   onOptTouchStart (option: Option, e: TouchEvent) {
+    console.log('e', e)
     const touch = e.touches[0]
     this.optStartX = touch.pageX
     this.optStartY = touch.pageY
