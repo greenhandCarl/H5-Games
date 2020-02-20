@@ -12,19 +12,23 @@
       </span>
       <img class='word-img' v-if='item.type === "img"' :src='item.content' />
     </div>
+    <Record :totalTime_ms='5000' />
   </div>
 </template>
 
 <script lang='ts'>
 import { Component, Vue } from 'vue-property-decorator'
 import { RandomPos } from '@/utils/util'
+import Record from '@/components/Record.vue'
 
 interface Word {
   type: string;
   content: string;
   keyword: string;
 }
-@Component
+@Component({
+  components: { Record }
+})
 export default class App extends Vue {
   words: Array<Word> = [
     { type: 'text', content: 'apple', keyword: 'apple' },
