@@ -153,6 +153,7 @@ export default class App extends Vue {
   }
 
   onOptTouchStart (option: Option, e: TouchEvent) {
+    console.log('e', e)
     const touch = e.touches[0]
     this.optStartX = touch.pageX
     this.optStartY = touch.pageY
