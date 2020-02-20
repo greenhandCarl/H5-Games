@@ -19,12 +19,14 @@
         </div>
       </section>
       <div class="draging-view" ref="dragView"></div>
+      <CountProgress class="count-progress-warp" :start="startPlay" time="10000" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import CountProgress from '../../components/CountdownProgress.vue'
 
 interface Word {
     name: string;
@@ -48,7 +50,11 @@ interface Position {
   h?: number;
 }
 
-@Component
+@Component({
+  components: {
+    CountProgress
+  }
+})
 export default class App extends Vue {
   words: Word[] = [
     {
@@ -92,12 +98,15 @@ export default class App extends Vue {
 
   isHorizontal = false
 
+  startPlay = false
+
   mounted () {
     this.dragView = this.$refs.dragView
     this.initiateGame()
     const orientation = window.matchMedia('(orientation: portrait)')
     orientation.addListener(this.orientationLister)
     this.orientationLister(orientation)
+    this.startPlay = true
   }
 
   orientationLister (mql: any) {
@@ -188,6 +197,9 @@ export default class App extends Vue {
       this.droppableElements.forEach((elem: HTMLElement) => {
         elem.innerHTML = ''
       })
+      this.draggableElements.forEach((elem: HTMLElement) => {
+        elem.style.visibility = 'visible'
+      })
       this.initiateGame()
       correctSpan.textContent = this.gameResult.correct
       totalSpan.textContent = this.gameResult.total
@@ -196,6 +208,7 @@ export default class App extends Vue {
       scoreSection.style.opacity = 1
     }, 500)
     event.stopPropagation()
+    this.startPlay = true
   }
 
   checkDropPos (curPos: Position) {
@@ -295,6 +308,12 @@ export default class App extends Vue {
     }
     return pos
   }
+
+  onCountdown (time: number) {
+    if (time === 0) {
+      this.startPlay = false
+    }
+  }
 }
 </script>
 
@@ -356,10 +375,11 @@ html {
   :hover {
     background-color: #333;
   }
-  .play-again-btn-entrance {
-    opacity: 1;
-    transform: translate(-50%,6rem);
-  }
+}
+
+#play-again-btn.play-again-btn-entrance {
+  opacity: 1;
+  transform: translate(-50%,6rem);
 }
 
 .draggable-items {
@@ -452,5 +472,12 @@ html {
 
 .trans-ani{
   transition: left 0.3s cubic-bezier(0.645, 0.045, 0.355, 1),top 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.count-progress-warp{
+  position: absolute;
+  bottom: 1.0rem;
+  left: 50%;
+  transform: translateX(-50%)
 }
 </style>

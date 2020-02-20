@@ -25,6 +25,11 @@ module.exports = {
             template: 'public/sinkSubmarine.html',
             filename: 'sinkSubmarine.html'
         },
+        dumpAirship: {
+            entry: 'src/pages/dumpAirship/main.ts',
+            template: 'public/dumpAirship.html',
+            filename: 'dumpAirship.html'
+        },
         bubbleJab: {
             entry: 'src/pages/bubbleJab/main.ts',
             template: 'public/bubbleJab.html',
