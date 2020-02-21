@@ -15,21 +15,21 @@ export default class CountdownProgress extends Vue {
   @Prop() time!: number // 毫秒为单位
 
   currentTime = this.time
-  duration = 50
+  duration = 40
+  timeEvent = 0
 
   @Watch('start')
-  changeStatus (val: boolean, old: boolean) {
-    console.log('changeStatus')
-    console.log(old)
+  changeStatus (val: boolean) {
     if (val) {
       this.onStart()
       this.startProgress()
+    } else {
+      clearTimeout(this.timeEvent)
     }
   }
 
   @Emit('onStart')
   onStart () {
-    console.log('start')
     this.currentTime = this.time
   }
 
@@ -44,7 +44,7 @@ export default class CountdownProgress extends Vue {
   }
 
   startProgress () {
-    setTimeout(() => {
+    this.timeEvent = setTimeout(() => {
       this.currentTime = this.currentTime - this.duration
       this.onCountdown(Math.ceil(this.currentTime))
       if (this.currentTime <= 0) {
@@ -79,7 +79,7 @@ export default class CountdownProgress extends Vue {
     height: 100%;
     background: #3dcc81;
     border-radius: 0.25rem;
-    transition: width 0.05s cubic-bezier(0.645, 0.045, 0.355, 1)
+    transition: width 0.02s linear
   }
 }
 </style>
