@@ -39,6 +39,11 @@ module.exports = {
             entry: 'src/pages/grabJellyfish/main.ts',
             template: 'public/grabJellyfish.html',
             filename: 'grabJellyfish.html'
+        },
+        pageTurn: {
+            entry: 'src/pages/pageTurn/main.ts',
+            template: 'public/pageTurn.html',
+            filename: 'pageTurn.html'
         }
     }
 }
