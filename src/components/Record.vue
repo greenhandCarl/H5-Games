@@ -3,7 +3,7 @@
     <div class='bar-container'>
       <img class='microphone' src='../assets/imgs/microphone.png' />
       <img class='signal' src='../assets/imgs/signal.png' />
-      <div class='bar' :style='{ width: `${ currentTime_ms / totalTime_ms * 100 }%` }'></div>
+      <div class='bar' :style='{ width: `${ currentTimeMs / totalTimeMs * 100 }%` }'></div>
     </div>
   </div>
 </template>
@@ -13,25 +13,27 @@ import { Component, Vue, Prop } from 'vue-property-decorator'
 
 @Component
 export default class Record extends Vue {
-  @Prop({ default: 0 }) totalTime_ms!: number
+  @Prop({ default: 0 }) totalTimeMs!: number
 
   timer: number | null = null
-  currentTime_ms: number = 0
-  start: boolean = false
+  currentTimeMs = 0
+  start = false
 
   mounted () {
-    this.currentTime_ms = this.totalTime_ms
+    this.currentTimeMs = this.totalTimeMs
     this.countDown()
   }
 
   countDown () {
     this.timer = setTimeout(() => {
-      this.timer = null
-      if (this.currentTime_ms >= 20) {
-        this.currentTime_ms = this.currentTime_ms - 20
+      if (this.timer) clearTimeout(this.timer)
+      console.log(1)
+      console.log('this.currentTimeMs', this.currentTimeMs)
+      if (this.currentTimeMs >= 20) {
+        this.currentTimeMs = this.currentTimeMs - 20
         this.countDown()
       } else {
-        this.currentTime_ms = 0
+        this.currentTimeMs = 0
       }
     }, 20)
   }

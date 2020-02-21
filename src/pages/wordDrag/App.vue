@@ -28,7 +28,7 @@
         @touchend='onOptTouchEnd'
       />
     </div>
-    <Record :totalTime_ms='6000' />
+    <Record :totalTimeMs='6000' />
   </div>
 </template>
 

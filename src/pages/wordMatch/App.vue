@@ -12,7 +12,7 @@
       </span>
       <img class='word-img' v-if='item.type === "img"' :src='item.content' />
     </div>
-    <Record :totalTime_ms='5000' />
+    <Record :totalTimeMs='5000' />
   </div>
 </template>
 
