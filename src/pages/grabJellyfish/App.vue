@@ -178,7 +178,7 @@ body{
 .word-warp{
   position: absolute;
   text-align: center;
-  background-image: url('./img/jelly_flish.png');
+  background-image: url('./img/jelly_fish.png');
   background-position: center;
   background-size:100% 100%;
   background-repeat:no-repeat;
