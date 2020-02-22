@@ -32,6 +32,7 @@ interface Config {
   totalMatchingPairs: number;
   startPlay: boolean;
 }
+
 @Component({
   components: {
     CountProgress
@@ -141,6 +142,14 @@ export default class App extends Vue {
   position: relative;
 }
 
+body{
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
 $vw_base: 375;
 $vw_fontsize: 20;
 html {
@@ -150,13 +159,6 @@ html {
   margin: 0;
   height: 100%;
   width: 100%;
-}
-
-body{
-  height: 100%;
-  width: 100%;
-  padding: 0;
-  margin: 0;
 }
 
 @media screen and (orientation: landscape) {

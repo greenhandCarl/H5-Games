@@ -1,43 +1,54 @@
 <template>
   <div id="app">
-    <div class="game-body" @touchmove="touchMove" @touchend="touchEnd">
+    <div class="game-body">
       <section class="score">
         <span class="correct">{{gameResult.correct}}</span>/
         <span class="total">{{gameResult.total}}</span>
-        <button id="play-again-btn" ref="againBtn" @click="playAgainBtnClick">重新开始</button>
       </section>
       <section class="matching-pairs">
         <div class='matching-pair' v-for="(item, index) in droppableWords" :key="index">
-          <span class='droppable' :data-word="item.name"></span>
+          <span class='droppable' :data-word="item.name" :style="{'margin-top':dropPos[index]}"></span>
         </div>
       </section>
-      <section class="draggable-items">
-        <i v-for="(item, index) in draggableWords" :key="index" @touchstart="dragStart"
-        class="draggable" :style="{color: item.color}" :data-word="item.name">{{item.name}}</i>
-      </section>
+      <div v-for="(item, index) in draggableWords" :key="index"
+        @touchstart="touchStart($event,item)"
+        @touchmove="touchMove($event,item)"
+        @touchend="touchEnd($event,item)"
+        class="draggable" :style="{left: item.left, top: item.top}">{{item.name}}</div>
       <div class="draging-view" ref="dragView"></div>
-      <img class="answer-emo" src="./img/answer_emo.png"/>
+      <img class="answer-emo" :src="gameResult.gameStatus === 3? require('./img/answer_over.png'):require('./img/answer_emo.png')"/>
       <img class="game-house" src="./img/house.png"/>
+      <div :class="['game-word',gameResult.gameStatus === 3? 'game-word-entrance':'']">{{gameResult.correctWord}}</div>
+      <button id="play-again-btn" ref="againBtn" @click="playAgainBtnClick">下一题</button>
     </div>
+    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" :time="gameConfig.playTime" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import CountProgress from '../../components/CountdownProgress.vue'
 
 interface Word {
-    name: string;
-    color: string;
+  id: number;
+  name: string;
+  left: string;
+  top: string;
+  isCorrect: boolean;
 }
 
 interface Config {
-    totalDraggableItems: number;
-    totalMatchingPairs: number;
+  isHorizontal: boolean; // 是否横屏
+  startPlay: boolean; // 开始游戏状态
+  playTime: number; // 游戏时长,单位ms
+  isFirst: boolean; // 是否第一次玩，第一次是导学
 }
 
 interface Result {
-    correct: number;
-    total: number;
+  correct: number;
+  total: number;
+  gameStatus: number; // 1: 开始; 2: 成功；3：失败
+  correctWord: string; // 正确的单词
 }
 
 interface Position {
@@ -47,34 +58,33 @@ interface Position {
   h: number;
 }
 
-@Component
+@Component({
+  components: {
+    CountProgress
+  }
+})
 export default class App extends Vue {
-  words: Array<Word> = [
-    { name: 'i', color: '#ff0000' },
-    { name: 'am', color: '#fd5c63' },
-    { name: 'a', color: '#333333' },
-    { name: 'boy', color: '#a4c639' },
-    { name: 'good', color: '#000000' }
-  ]
+  words: Array<Word> = []
 
   gameConfig: Config = {
-    totalDraggableItems: 4,
-    totalMatchingPairs: 4
+    isHorizontal: false,
+    startPlay: false,
+    playTime: 15000,
+    isFirst: true
   }
 
   gameResult: Result = {
     correct: 0,
-    total: 0
+    total: 0,
+    gameStatus: 0,
+    correctWord: ''
   }
 
   draggableWords: Array<Word> = []
   droppableWords: Array<Word> = []
+  dropPos: string[] = []
 
   root: any
-  draggableElements: any
-  droppableElements: any
-
-  isHorizontal = false
 
   mounted () {
     this.root = document.querySelector('.game-body')
@@ -82,176 +92,133 @@ export default class App extends Vue {
     const orientation = window.matchMedia('(orientation: portrait)')
     orientation.addListener(this.orientationLister)
     this.orientationLister(orientation)
+    this.gameConfig.startPlay = true
+    this.gameResult.gameStatus = 1
   }
 
   orientationLister (mql: MediaQueryList | MediaQueryListEvent) {
     if (mql.matches) {
       console.log('此时竖屏')
-      this.isHorizontal = false
+      this.gameConfig.isHorizontal = false
     } else {
       console.log('此时横屏')
-      this.isHorizontal = true
+      this.gameConfig.isHorizontal = true
     }
   }
 
   initiateGame () {
+    this.words = [
+      { id: 1, name: 'I', left: '15%', top: 'auto', isCorrect: false },
+      { id: 2, name: 'am', left: '30%', top: 'auto', isCorrect: false },
+      { id: 3, name: 'a', left: '45%', top: 'auto', isCorrect: false },
+      { id: 4, name: 'good', left: '60%', top: 'auto', isCorrect: false },
+      { id: 5, name: 'boy', left: '75%', top: 'auto', isCorrect: false }
+    ]
+    this.calculatePos()
+    this.droppableWords = this.words
+    this.draggableWords = this.generateRandomItemsArray(this.droppableWords)
     this.gameResult.correct = 0
-    this.gameResult.total = this.gameConfig.totalDraggableItems
-    this.draggableWords = this.generateRandomItemsArray(
-      this.gameConfig.totalDraggableItems, this.words)
+    this.gameResult.total = this.words.length
+    this.gameResult.correctWord = this.words.map(item => item.name).join(' ') + '.'
+  }
 
-    const randomDroppableWords =
-      this.gameConfig.totalMatchingPairs < this.gameConfig.totalDraggableItems
-        ? this.generateRandomItemsArray(this.gameConfig.totalMatchingPairs, this.draggableWords)
-        : this.draggableWords
-    this.droppableWords = [...randomDroppableWords]
-      .sort((a, b) =>
-        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-      )
-
-    this.$nextTick(() => {
-      this.draggableElements = document.querySelectorAll('.draggable')
-      this.droppableElements = document.querySelectorAll('.droppable')
+  calculatePos () {
+    // 答案可能是3、4、5个
+    let dragPos: string[] = []
+    if (this.words.length === 3) {
+      dragPos = ['25%', '40%', '55%']
+      this.dropPos = ['1.6rem', '0', '1.6rem']
+    } else if (this.words.length === 4) {
+      dragPos = ['20%', '35%', '50%', '65%']
+      this.dropPos = ['2.0rem', '0.2rem', '0.2rem', '2.0rem']
+    } else if (this.words.length === 5) {
+      dragPos = ['15%', '30%', '45%', '60%', '75%']
+      this.dropPos = ['2.0rem', '0.8rem', '0', '0.8rem', '2.0rem']
+    }
+    this.words.forEach((item, index) => {
+      item.left = dragPos[index]
     })
   }
 
-  dragStart (event: TouchEvent) {
-    console.log('dragStart')
-    const sourceNode = event.currentTarget as HTMLElement
-    if (!sourceNode) return
-    // 克隆节点
-    const clonedNode = sourceNode.cloneNode(true)
-    // 在父节点插入克隆的节点
-    const dragView = this.$refs.dragView as HTMLElement
-    dragView.innerHTML = ''
-    dragView.appendChild(clonedNode)
-    dragView.style.display = 'block'
-    this.dragChangePos(event)
+  touchStart (event: TouchEvent, word: Word) {
+    this.dragChangePos(event, word)
   }
 
-  touchMove (event: TouchEvent) {
-    this.dragChangePos(event)
+  touchMove (event: TouchEvent, word: Word) {
+    this.dragChangePos(event, word)
   }
 
-  touchEnd (event: TouchEvent) {
-    this.dragChangePos(event)
-    console.log('touchEnd')
+  touchEnd (event: TouchEvent, word: Word) {
+    this.dragChangePos(event, word)
+    this.checkDropPos(event, word)
+  }
+
+  dragChangePos (event: TouchEvent, word: Word) {
+    const curTarget = event.currentTarget as HTMLElement
     const touch = event.targetTouches[0] || event.changedTouches[0]
-    if (!touch) return
+    if (!curTarget || !touch) return
     const width = document.documentElement.clientWidth
-    const curPos: Position = {
-      x: this.isHorizontal ? touch.pageX : touch.pageY,
-      y: this.isHorizontal ? touch.pageY : (width - touch.pageX),
-      w: 0,
-      h: 0
-    }
-    console.log(curPos)
-    this.checkDropPos(curPos)
+    const curX = this.gameConfig.isHorizontal ? touch.pageX : touch.pageY
+    const curY = this.gameConfig.isHorizontal ? touch.pageY : (width - touch.pageX)
+    word.left = `${curX - curTarget.offsetWidth / 2}px`
+    word.top = `${curY - curTarget.offsetHeight / 2}px`
   }
 
-  playAgainBtnClick (event: Event) {
-    const againBtn = this.$refs.againBtn as HTMLElement
-    console.log('clickAgain')
-    againBtn.classList.remove('play-again-btn-entrance')
-    const draggableItems = this.root.querySelector('.draggable-items')
-    const matchingPairs = this.root.querySelector('.matching-pairs')
-    const scoreSection = this.root.querySelector('.score')
-    draggableItems.style.opacity = 0
-    matchingPairs.style.opacity = 0
-    scoreSection.style.opacity = 0
-    setTimeout(() => {
-      againBtn.style.display = 'none'
-      this.droppableElements.forEach((elem: HTMLElement) => {
-        elem.innerHTML = ''
-      })
-      this.initiateGame()
-      draggableItems.style.opacity = 1
-      matchingPairs.style.opacity = 1
-      scoreSection.style.opacity = 1
-    }, 500)
-    event.stopPropagation()
-  }
-
-  checkDropPos (curPos: Position) {
-    const dragView = this.$refs.dragView as HTMLElement
-    const dragTarget = dragView.getElementsByClassName('draggable')[0]
-    if (!dragTarget) return
-    let isDrop = false
-    this.droppableElements.forEach((elem: HTMLElement) => {
+  checkDropPos (event: TouchEvent, word: Word) {
+    const curTarget = event.currentTarget as HTMLElement
+    const touch = event.targetTouches[0] || event.changedTouches[0]
+    if (!curTarget || !touch) return
+    const width = document.documentElement.clientWidth
+    const curX = this.gameConfig.isHorizontal ? touch.pageX : touch.pageY
+    const curY = this.gameConfig.isHorizontal ? touch.pageY : (width - touch.pageX)
+    const droppableElements = Array.from(document.querySelectorAll('.droppable') as NodeListOf<HTMLElement>)
+    const dropElem = droppableElements.find(elem => {
       const objPos = this.getObjPos(elem)
-      if (objPos && curPos.x > objPos.x && curPos.x < (objPos.x + objPos.w) &&
-        curPos.y > objPos.y && curPos.y < (objPos.y + objPos.h)) {
-        console.log('in')
-        if (elem.getAttribute('data-word') === dragTarget.getAttribute('data-word')) {
-          console.log('answer true')
-          elem.appendChild(dragTarget)
-          dragView.style.display = 'none'
-          this.gameResult.correct++
-          isDrop = true
-          if (this.gameResult.correct === Math.min(this.gameConfig.totalMatchingPairs, this.gameConfig.totalDraggableItems)) {
-            // Game Over!!
-            const againBtn = this.$refs.againBtn as HTMLElement
-            againBtn.style.display = 'block'
-            setTimeout(() => {
-              againBtn.classList.add('play-again-btn-entrance')
-            }, 200)
-          }
-        }
-      }
+      return objPos &&
+        curX > objPos.x && curY > objPos.y &&
+        curX < (objPos.x + objPos.w) &&
+        curY < (objPos.y + objPos.h) &&
+        elem.getAttribute('data-word') === word.name
     })
-    if (!isDrop) {
-      const oldPos = this.getFromTragetPos()
-      if (!oldPos) return
-      dragView.classList.add('trans-ani')
-      this.$nextTick(() => {
-        dragView.style.left = oldPos.x + 'px'
-        dragView.style.top = oldPos.y + 'px'
-        setTimeout(() => {
-          dragView.classList.remove('trans-ani')
-          dragView.style.display = 'none'
-        }, 400)
-      })
+
+    if (dropElem) {
+      const dropPos = this.getObjPos(dropElem)
+      word.left = `${dropPos.x + dropPos.w / 2 - curTarget.offsetWidth / 2}px`
+      word.top = `${dropPos.y}px`
+      word.isCorrect = true
+    } else {
+      word.isCorrect = false
+    }
+
+    this.handleGameStatus()
+  }
+
+  handleGameStatus () {
+    const correctWords = this.draggableWords.filter(word => word.isCorrect)
+    this.gameResult.correct = correctWords.length
+    if (correctWords.length === this.words.length) {
+      // Game Over!!
+      const againBtn = this.$refs.againBtn as HTMLElement
+      againBtn.style.display = 'block'
+      this.gameConfig.startPlay = false
+      setTimeout(() => {
+        againBtn.classList.add('play-again-btn-entrance')
+      }, 200)
     }
   }
 
-  dragChangePos (event: TouchEvent) {
-    const touch = event.targetTouches[0] || event.changedTouches[0]
-    if (!touch) return
-    const width = document.documentElement.clientWidth
-    const pos: Position = {
-      x: this.isHorizontal ? touch.pageX : touch.pageY,
-      y: this.isHorizontal ? touch.pageY : (width - touch.pageX),
-      w: 0,
-      h: 0
-    }
-    const dragView = this.$refs.dragView as HTMLElement
-    dragView.style.left = (pos.x - dragView.offsetWidth / 2) + 'px'
-    dragView.style.top = (pos.y - dragView.offsetHeight / 2) + 'px'
-  }
-
-  getFromTragetPos (): Position {
-    const dragView = this.$refs.dragView as HTMLElement
-    const dragTarget = dragView.getElementsByClassName('draggable')[0]
-    if (dragTarget) {
-      for (let i = 0; i < this.draggableElements.length; i++) {
-        if (this.draggableElements[i].getAttribute('data-word') === dragTarget.getAttribute('data-word')) {
-          return this.getObjPos(this.draggableElements[i])
-        }
-      }
-    }
-    return { x: 0, y: 0, w: 0, h: 0 }
-  }
-
-  generateRandomItemsArray (n: number, originalArray: Array<Word>): Array<Word> {
+  generateRandomItemsArray (originalArray: Array<Word>): Array<Word> {
     const res = []
-    const clonedArray = [...originalArray]
-    if (n > clonedArray.length) n = clonedArray.length
-    for (let i = 1; i <= n; i++) {
+    const clonedArray = JSON.parse(JSON.stringify(originalArray))
+    for (let i = 1; i <= originalArray.length; i++) {
       const randomIndex = Math.floor(Math.random() * clonedArray.length)
       res.push(clonedArray[randomIndex])
       clonedArray.splice(randomIndex, 1)
     }
-    return res
+    return res.map((item, index) => {
+      item.left = originalArray[index].left
+      return item
+    })
   }
 
   getObjPos (target: HTMLElement): Position {
@@ -270,6 +237,36 @@ export default class App extends Vue {
     }
     return pos
   }
+
+  playAgainBtnClick (event: Event) {
+    const againBtn = this.$refs.againBtn as HTMLElement
+    console.log('clickAgain')
+    againBtn.classList.remove('play-again-btn-entrance')
+    const matchingPairs = this.root.querySelector('.matching-pairs')
+    const scoreSection = this.root.querySelector('.score')
+    matchingPairs.style.opacity = 0
+    scoreSection.style.opacity = 0
+    setTimeout(() => {
+      againBtn.style.display = 'none'
+      this.initiateGame()
+      matchingPairs.style.opacity = 1
+      scoreSection.style.opacity = 1
+      this.gameConfig.startPlay = true
+      this.gameResult.gameStatus = 1
+    }, 500)
+    event.stopPropagation()
+  }
+
+  onCountdown (time: number) {
+    const correctWords = this.draggableWords.filter(word => word.isCorrect)
+    if (time === 0) {
+      this.gameConfig.startPlay = false
+    }
+    if (time === 0 && correctWords.length !== this.words.length) {
+      // 失败
+      this.gameResult.gameStatus = 3
+    }
+  }
 }
 </script>
 
@@ -283,6 +280,14 @@ export default class App extends Vue {
   color: #333;
   width:100%;
   height:100%;
+  overflow: hidden;
+}
+
+body{
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
   overflow: hidden;
 }
 
@@ -309,6 +314,25 @@ html {
   padding: 0.5rem;
   position: relative;
   transition: opacity 0.2s;
+}
+
+.game-word{
+  position: absolute;
+  z-index:999;
+  top: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  font-size: 1rem;
+  color: #333;
+  background-color: #ffdf25;
+  padding: 0.6rem 1.0rem;
+  transition: transform 0.5s;
+}
+
+.game-word-entrance{
+  display: block;
+  transform: translate(-50%,2rem);
 }
 
 #play-again-btn.play-again-btn-entrance {
@@ -338,20 +362,16 @@ html {
   }
 }
 
-.draggable-items {
-  display: flex;
-  justify-content: center;
-  margin: 1.5rem 1rem 0.5rem 1rem;
-  transition: opacity 0.5s;
-}
-
 .draggable {
-  height: 2.5rem;
-  min-width: 2rem;
+  z-index: 999;
+  position: absolute;
+  bottom: 3rem;
+  height: 2.2rem;
+  min-width: 3.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   font-weight: bold;
   padding: 0.2rem 0.5rem;
   transition: opacity 0.2s;
@@ -359,8 +379,6 @@ html {
   background-position: center;
   background-size:100% 100%;
   background-repeat:no-repeat;
-  margin-left: 0.2rem;
-  margin-right: 0.2rem;
 }
 
 .matching-pairs {
@@ -374,28 +392,16 @@ html {
   overflow: hidden;
   position: relative;
   background-image: url('./img/matching_bg.png');
-  background-position: center;
+  background-position: center 0.8rem;
   background-size:100% 100%;
   background-repeat:no-repeat;
-  padding-top: 0.8rem;
   .matching-pair {
-    height: 2.5rem;
-    max-width: 25%;
     flex: 1 auto;
     display: flex;
-    flex-direction: column;
     justify-content: center;
-    align-items: center;
-    span {
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      user-select: none;
-    }
-
     .droppable {
+      height: 2.5rem;
+      max-width:6rem;
       width: 90%;
       font-size: 4rem;
       background-image: url('./img/cloud.png');
@@ -403,6 +409,11 @@ html {
       background-size:100% 100%;
       background-repeat:no-repeat;
       transition: 0.2s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      user-select: none;
     }
   }
 }
@@ -428,6 +439,13 @@ html {
   display: none;
   top: 0;
   left: 0;
+}
+
+.count-progress-warp{
+  position: absolute;
+  bottom: 1.0rem;
+  left: 50%;
+  transform: translateX(-50%)
 }
 
 .trans-ani{
