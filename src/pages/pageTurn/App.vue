@@ -45,7 +45,6 @@
         >
           cat
         </div>
-        <!-- background-image: url('./imgs/cat.png'); -->
         <div
           class="right-front-page"
           :style='{
