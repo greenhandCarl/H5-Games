@@ -1,48 +1,28 @@
 <template>
   <div id="app">
-    <div class="game-body">
+    <div class="game-body dumpAirship">
       <section class="score">
         <span class="correct">{{gameResult.correct}}</span>/
         <span class="total">{{gameResult.total}}</span>
         <button id="play-again-btn" ref="againBtn" @click="playAgainBtnClick">重新开始</button>
       </section>
       <section class="matching-pairs">
-        <div class='matching-pair' v-for="(item, index) in words" :key="index" :data-pos="index" @click="clickWord">
+        <div class='matching-pair' v-for="(item, index) in words" :key="index" :data-pos="index" @click="clickWord($event, item)">
           <span>{{item.name}}</span>
         </div>
       </section>
-      <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" time="20000" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
       <img class="answer-girl" src="./img/answer_girl.png" ref="girlElem" :style="girlStyle"/>
       <img class="game-airship" src="./img/airship.png"/>
     </div>
+    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" :time="gameConfig.playTime"
+      @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import CountProgress from '../../components/CountdownProgress.vue'
-
-interface Word {
-  name: string;
-  isCorrect: boolean;
-}
-
-interface Config {
-  totalMatchingPairs: number;
-  startPlay: boolean;
-}
-
-interface Result {
-  correct: number;
-  total: number;
-}
-
-interface Position {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+import { Word, Config, Result, getElementPosition } from '@/utils/BaseGame.ts'
 
 @Component({
   components: {
@@ -50,26 +30,21 @@ interface Position {
   }
 })
 export default class App extends Vue {
-  words: Array<Word> = [
-    { name: 'Are', isCorrect: false },
-    { name: 'you', isCorrect: false },
-    { name: 'a', isCorrect: false },
-    { name: 'good', isCorrect: false },
-    { name: 'boy', isCorrect: false },
-    { name: '?', isCorrect: false }
-  ]
+  words: Array<Word> = []
 
   gameConfig: Config = {
-    totalMatchingPairs: 6,
-    startPlay: false
+    isHorizontal: false,
+    startPlay: false,
+    playTime: 15000,
+    isFirst: true
   }
 
   gameResult: Result = {
     correct: 0,
-    total: 0
+    total: 0,
+    gameStatus: 0,
+    correctWord: ''
   }
-
-  isHorizontal = false
 
   girlStyle = {
     left: '0.5rem',
@@ -80,37 +55,47 @@ export default class App extends Vue {
 
   mounted () {
     this.root = document.querySelector('.game-body')
+    this.initiateGame()
     const orientation = window.matchMedia('(orientation: portrait)')
     orientation.addListener(this.orientationLister)
     this.orientationLister(orientation)
-    this.initiateGame()
     this.gameConfig.startPlay = true
+    this.gameResult.gameStatus = 1
   }
 
   orientationLister (mql: MediaQueryList | MediaQueryListEvent) {
     if (mql.matches) {
       console.log('此时竖屏')
-      this.isHorizontal = false
+      this.gameConfig.isHorizontal = false
     } else {
       console.log('此时横屏')
-      this.isHorizontal = true
+      this.gameConfig.isHorizontal = true
     }
   }
 
   initiateGame () {
+    this.words = [
+      { id: 1, name: 'Are', isCorrect: false },
+      { id: 2, name: 'you', isCorrect: false },
+      { id: 3, name: 'a', isCorrect: false },
+      { id: 4, name: 'good', isCorrect: false },
+      { id: 5, name: 'boy', isCorrect: false },
+      { id: 6, name: '?', isCorrect: false }
+    ]
     this.gameResult.correct = 0
-    this.gameResult.total = this.gameConfig.totalMatchingPairs
+    this.gameResult.total = this.words.length
+    this.gameResult.correctWord = this.words.map(item => item.name).join(' ') + '.'
   }
 
-  clickWord (event: Event) {
+  clickWord (event: Event, word: Word) {
     console.log(event.currentTarget)
     const curTarget = event.currentTarget as HTMLElement
     if (!curTarget) return
     const targetPos = curTarget.getAttribute('data-pos') || '0'
     if (parseInt(targetPos) === this.gameResult.correct) {
       const girlElem = this.$refs.girlElem as HTMLElement
-      const curPos = this.getObjPos(curTarget)
-      const girlPos = this.getObjPos(girlElem)
+      const curPos = getElementPosition(curTarget)
+      const girlPos = getElementPosition(girlElem)
 
       this.girlStyle = {
         left: `${curPos.x + curPos.w / 2 - girlPos.w / 2}px`,
@@ -118,10 +103,19 @@ export default class App extends Vue {
       }
       curTarget.classList.add('matching-correct')
       this.gameResult.correct++
+      word.isCorrect = true
     }
-    if (this.gameResult.correct === this.gameResult.total) {
+    this.handleGameStatus()
+  }
+
+  handleGameStatus () {
+    const correctWords = this.words.filter(word => word.isCorrect)
+    this.gameResult.correct = correctWords.length
+    if (correctWords.length === this.words.length) {
+      // Game Over!!
       const againBtn = this.$refs.againBtn as HTMLElement
       againBtn.style.display = 'block'
+      this.gameConfig.startPlay = false
       setTimeout(() => {
         againBtn.classList.add('play-again-btn-entrance')
       }, 200)
@@ -153,26 +147,14 @@ export default class App extends Vue {
     event.stopPropagation()
   }
 
-  getObjPos (target: HTMLElement): Position {
-    const pos: Position = {
-      x: target.offsetLeft,
-      y: target.offsetTop,
-      w: target.offsetWidth,
-      h: target.offsetHeight
-    }
-    let offsetTarget = target.offsetParent as HTMLElement
-    // 当元素为body时，其parent为null
-    while (offsetTarget) {
-      pos.x += offsetTarget.offsetLeft
-      pos.y += offsetTarget.offsetTop
-      offsetTarget = offsetTarget.offsetParent as HTMLElement
-    }
-    return pos
-  }
-
   onCountdown (time: number) {
+    const correctWords = this.words.filter(word => word.isCorrect)
     if (time === 0) {
       this.gameConfig.startPlay = false
+    }
+    if (time === 0 && correctWords.length !== this.words.length) {
+      // 失败
+      this.gameResult.gameStatus = 3
     }
   }
 }

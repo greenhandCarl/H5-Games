@@ -44,6 +44,11 @@ module.exports = {
             entry: 'src/pages/pageTurn/main.ts',
             template: 'public/pageTurn.html',
             filename: 'pageTurn.html'
+        },
+        listenChoose: {
+            entry: 'src/pages/listenChoose/main.ts',
+            template: 'public/listenChoose.html',
+            filename: 'listenChoose.html'
         }
     }
 }

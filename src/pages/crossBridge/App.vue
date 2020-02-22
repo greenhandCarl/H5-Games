@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="game-body">
+    <div class="game-body crossBridge">
       <section class="score">
         <span class="correct">{{gameResult.correct}}</span>/
         <span class="total">{{gameResult.total}}</span>
@@ -21,42 +21,15 @@
       <div :class="['game-word',gameResult.gameStatus === 3? 'game-word-entrance':'']">{{gameResult.correctWord}}</div>
       <button id="play-again-btn" ref="againBtn" @click="playAgainBtnClick">下一题</button>
     </div>
-    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" :time="gameConfig.playTime" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
+    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" :time="gameConfig.playTime"
+      @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import CountProgress from '../../components/CountdownProgress.vue'
-
-interface Word {
-  id: number;
-  name: string;
-  left: string;
-  top: string;
-  isCorrect: boolean;
-}
-
-interface Config {
-  isHorizontal: boolean; // 是否横屏
-  startPlay: boolean; // 开始游戏状态
-  playTime: number; // 游戏时长,单位ms
-  isFirst: boolean; // 是否第一次玩，第一次是导学
-}
-
-interface Result {
-  correct: number;
-  total: number;
-  gameStatus: number; // 1: 开始; 2: 成功；3：失败
-  correctWord: string; // 正确的单词
-}
-
-interface Position {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+import { Word, Config, Result, getElementPosition } from '@/utils/BaseGame.ts'
 
 @Component({
   components: {
@@ -173,7 +146,7 @@ export default class App extends Vue {
     const curY = this.gameConfig.isHorizontal ? touch.pageY : (width - touch.pageX)
     const droppableElements = Array.from(document.querySelectorAll('.droppable') as NodeListOf<HTMLElement>)
     const dropElem = droppableElements.find(elem => {
-      const objPos = this.getObjPos(elem)
+      const objPos = getElementPosition(elem)
       return objPos &&
         curX > objPos.x && curY > objPos.y &&
         curX < (objPos.x + objPos.w) &&
@@ -182,7 +155,7 @@ export default class App extends Vue {
     })
 
     if (dropElem) {
-      const dropPos = this.getObjPos(dropElem)
+      const dropPos = getElementPosition(dropElem)
       word.left = `${dropPos.x + dropPos.w / 2 - curTarget.offsetWidth / 2}px`
       word.top = `${dropPos.y}px`
       word.isCorrect = true
@@ -219,23 +192,6 @@ export default class App extends Vue {
       item.left = originalArray[index].left
       return item
     })
-  }
-
-  getObjPos (target: HTMLElement): Position {
-    const pos: Position = {
-      x: target.offsetLeft,
-      y: target.offsetTop,
-      w: target.offsetWidth,
-      h: target.offsetHeight
-    }
-    let offsetTarget = target.offsetParent as HTMLElement
-    // 当元素为body时，其parent为null
-    while (offsetTarget) {
-      pos.x += offsetTarget.offsetLeft
-      pos.y += offsetTarget.offsetTop
-      offsetTarget = offsetTarget.offsetParent as HTMLElement
-    }
-    return pos
   }
 
   playAgainBtnClick (event: Event) {

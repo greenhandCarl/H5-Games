@@ -1,13 +1,16 @@
 <template>
   <div id="app">
-    <div class="sea-warp"></div>
-    <div class="game-body grabJellyfish">
-      <div class="word-warp" v-for="(item, index) in words" :key="index"
-        :style="{left: item.left, top: item.top}"
-        @click.stop="clickWord($event, item)"
-      >{{item.name}}</div>
+    <div class="game-body listenChoose">
+      <div class="result-word">{{gameResult.correctWord}}</div>
+      <div class="choose-word-warp">
+        <div class="word-warp" v-for="(item, index) in words" :key="index"
+          :style="{left: item.left, top: item.top}"
+          @click.stop="clickWord($event, item)"
+        ><img :src="item.img"/></div>
+      </div>
     </div>
-    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" time="20000" @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
+    <CountProgress class="count-progress-warp" :start="gameConfig.startPlay" :time="gameConfig.playTime"
+      @onCountdown="onCountdown" @onTimeout="onCountdown(0)"/>
   </div>
 </template>
 
@@ -15,7 +18,6 @@
 import { Component, Vue } from 'vue-property-decorator'
 import CountProgress from '../../components/CountdownProgress.vue'
 import { Word, Config, Result } from '@/utils/BaseGame.ts'
-import { RandomPos } from '@/utils/util'
 
 @Component({
   components: {
@@ -46,6 +48,7 @@ export default class App extends Vue {
     this.orientationLister(orientation)
     this.gameConfig.startPlay = true
     this.gameResult.gameStatus = 1
+    this.gameResult.correctWord = 'wash face'
   }
 
   orientationLister (mql: MediaQueryList | MediaQueryListEvent) {
@@ -60,35 +63,10 @@ export default class App extends Vue {
 
   initiateGame () {
     this.words = [
-      { id: 1, name: 'friend', isCorrect: false },
-      { id: 2, name: 'you', isCorrect: false },
-      { id: 3, name: 'my', isCorrect: false },
-      { id: 4, name: 'what', isCorrect: false },
-      { id: 5, name: 'boy', isCorrect: false },
-      { id: 6, name: 'good', isCorrect: false }
+      { id: 1, name: 'friend', left:'25%', isCorrect: false, img: require('./img/listen_01.png') },
+      { id: 2, name: 'you', left:'45%', isCorrect: false, img: require('./img/listen_02.png') },
+      { id: 3, name: 'my', left:'65%', isCorrect: false, img: require('./img/listen_03.png') }
     ]
-    let clientWidth = document.documentElement.clientWidth
-    let clientHeight = document.documentElement.clientHeight
-    if (clientWidth < clientHeight) {
-      // 竖屏
-      clientWidth = document.documentElement.clientHeight
-      clientHeight = document.documentElement.clientWidth
-    }
-    const showHeight = clientHeight - clientHeight / 5
-    const randomPos: RandomPos = new RandomPos()
-    const randomRadius = clientWidth / 375 * 30
-    this.words.forEach(word => {
-      console.log(randomRadius)
-      const circleCenter = randomPos.getRandomPos(
-        randomRadius,
-        clientWidth - randomRadius,
-        randomRadius,
-        showHeight - randomRadius,
-        randomRadius
-      )
-      word.left = `${circleCenter.x}px`
-      word.top = `${circleCenter.y}px`
-    })
   }
 
   clickWord (event: Event, word: Word) {
@@ -96,7 +74,6 @@ export default class App extends Vue {
     if (!curTarget) return
     console.log(event)
     console.log(curTarget)
-    curTarget.style.left = '0.5rem'
     curTarget.style.top = '78%'
     word.isCorrect = true
     this.handleGameStatus()
@@ -163,29 +140,38 @@ html {
   }
 }
 
-.sea-warp {
-  height: 100%;
-  width: 100%;
-  background-image: url('./img/sea_bg.jpg');
-  background-position: center;
-  background-size:100% 100%;
-  background-repeat:no-repeat;
+.result-word{
+  position: absolute;
+  z-index:999;
+  top: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  color: #333;
+  background-color: #ffdf25;
+  padding: 0.6rem 1.0rem;
+  transition: transform 0.5s;
 }
 
-.word-warp{
+.choose-word-warp{
   position: absolute;
-  text-align: center;
-  background-image: url('./img/jelly_fish.png');
-  background-position: center;
-  background-size:100% 100%;
-  background-repeat:no-repeat;
-  font-size: 0.8rem;
-  width:3rem;
-  height:3rem;
-  line-height:1.5rem;
-  cursor: pointer;
-  transition: left 0.6s cubic-bezier(0.645, 0.045, 0.355, 1),top 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
-  animation: arm-bounce 1.0s ease-in infinite;
+  width:100%;
+  top:50%;
+  display:flex;
+  flex-direction:row;
+  align-items: center;
+  justify-content: center;
+  .word-warp{
+    position: absolute;
+    text-align: center;
+    width:5rem;
+    height:5rem;
+    transition: left 0.6s cubic-bezier(0.645, 0.045, 0.355, 1),top 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
+    img{
+      width:100%;
+      height:auto;
+    }
+  }
 }
 
 .count-progress-warp{
@@ -193,17 +179,5 @@ html {
   bottom: 1.0rem;
   left: 50%;
   transform: translateX(-50%)
-}
-
-@keyframes arm-bounce {
-  0% {
-    transform: translateY(0);
-  }
-  65% {
-    transform: translateY(0.4rem);
-  }
-  100% {
-    transform: translateY(0);
-  }
 }
 </style>
