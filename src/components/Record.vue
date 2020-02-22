@@ -25,10 +25,8 @@ export default class Record extends Vue {
   }
 
   countDown () {
+    if (this.timer) clearTimeout(this.timer)
     this.timer = setTimeout(() => {
-      if (this.timer) clearTimeout(this.timer)
-      console.log(1)
-      console.log('this.currentTimeMs', this.currentTimeMs)
       if (this.currentTimeMs >= 20) {
         this.currentTimeMs = this.currentTimeMs - 20
         this.countDown()
